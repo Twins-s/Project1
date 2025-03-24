@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QLabel, QTextEdit
-from db_utils import add_complaint, get_complaints, resolve_complaint
+from my_app.db_utils import add_complaint, get_complaints, resolve_complaint
 
 class ComplaintsTab(QWidget):
     def __init__(self):
         super().__init__()
         self.initUI()
+        self.add_complaint_window = AddComplaintWindow(self)
 
     def initUI(self):
         self.layout = QVBoxLayout()
@@ -17,19 +18,6 @@ class ComplaintsTab(QWidget):
 
         self.controls_layout = QHBoxLayout()
         self.layout.addLayout(self.controls_layout)
-
-        self.add_complaint_button = QPushButton("Добавить жалобу")
-        self.resolve_complaint_button = QPushButton("Разрешить жалобу")
-
-        self.controls_layout.addWidget(self.add_complaint_button)
-        self.controls_layout.addWidget(self.resolve_complaint_button)
-
-        self.add_complaint_window = AddComplaintWindow(self)
-
-        self.add_complaint_button.clicked.connect(self.add_complaint_window.show)
-        self.resolve_complaint_button.clicked.connect(self.resolve_complaint)
-
-        self.populate_complaints_table()
 
     def populate_complaints_table(self):
         # Загрузка списка жалоб из базы данных
@@ -47,7 +35,10 @@ class ComplaintsTab(QWidget):
             self.complaints_table.setItem(row, 2, QTableWidgetItem(complaint.subject))
             self.complaints_table.setItem(row, 3, QTableWidgetItem(complaint.description))
             row += 1
-
+    def add_complaint_window(self):
+        return self.add_complaint_window
+    def resolve_complaint_window(self):
+        return self
     def add_complaint(self, complaint_data):
         # Добавление новой жалобы в базу данных
         add_complaint(complaint_data)

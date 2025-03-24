@@ -1,9 +1,9 @@
 import sqlite3
-from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QLineEdit, QPushButton, QLabel, QDialog
+from PyQt5.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QLineEdit, QPushButton, QLabel, QDialog, QMessageBox
 
 class FlightsTab(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.initUI()
 
     def initUI(self):
@@ -36,7 +36,7 @@ class FlightsTab(QWidget):
             row += 1
 
     def get_flights(self):
-        conn = sqlite3.connect('flights.db')
+        conn = sqlite3.connect('../flights.db')
         c = conn.cursor()
         c.execute("SELECT * FROM flights")
         flights = c.fetchall()
@@ -54,44 +54,52 @@ class FlightsTab(QWidget):
             result.append(flight_data)
         return result
 
-    def add_flight(self, flight_data):
-        conn = sqlite3.connect('flights.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO flights VALUES (?, ?, ?, ?, ?)", (
-            flight_data["flight_number"],
-            flight_data["date"],
-            flight_data["time"],
-            flight_data["from"],
-            flight_data["to"]
-        ))
-        conn.commit()
-        conn.close()
-        self.populate_flights_table()
+    def show_add_flight_window(self):
+        add_flight_window = AddFlightWindow(self)
+        add_flight_window.exec_()
 
-    def edit_flight(self, flight_data):
-        conn = sqlite3.connect('flights.db')
+    def show_edit_flight_window(self):
+        selected = self.flights_table.selectedItems()
+        if selected:
+            flight_number = selected[0].text()
+            flight_data = self.get_flight_data(flight_number)
+            edit_flight_window = EditFlightWindow(self, flight_data)
+            edit_flight_window.exec_()
+
+    def get_flight_data(self, flight_number):
+        conn = sqlite3.connect('../flights.db')
         c = conn.cursor()
-        c.execute("UPDATE flights SET date = ?, time = ?, `from` = ?, `to` = ? WHERE flight_number = ?", (
-            flight_data["date"],
-            flight_data["time"],
-            flight_data["from"],
-            flight_data["to"],
-            flight_data["flight_number"]
-        ))
-        conn.commit()
+        c.execute("SELECT * FROM flights WHERE flight_number = ?", (flight_number,))
+        flight = c.fetchone()
         conn.close()
-        self.populate_flights_table()
+
+        if flight:
+            return {
+                "flight_number": flight[0],
+                "date": flight[1],
+                "time": flight[2],
+                "from": flight[3],
+                "to": flight[4]
+            }
+        else:
+            return None
 
     def delete_flight(self):
         selected = self.flights_table.selectedItems()
         if selected:
             flight_number = selected[0].text()
-            conn = sqlite3.connect('flights.db')
-            c = conn.cursor()
-            c.execute("DELETE FROM flights WHERE flight_number = ?", (flight_number,))
-            conn.commit()
-            conn.close()
-            self.populate_flights_table()
+            reply = QMessageBox.question(self, 'Подтверждение', f"Вы уверены, что хотите удалить рейс {flight_number}?",
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.delete_flight_from_db(flight_number)
+                self.populate_flights_table()
+
+    def delete_flight_from_db(self, flight_number):
+        conn = sqlite3.connect('../flights.db')
+        c = conn.cursor()
+        c.execute("DELETE FROM flights WHERE flight_number = ?", (flight_number,))
+        conn.commit()
+        conn.close()
 
 class AddFlightWindow(QDialog):
     def __init__(self, parent=None):
@@ -136,18 +144,18 @@ class AddFlightWindow(QDialog):
         self.close()
 
 class EditFlightWindow(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, flight_data=None):
         super().__init__(parent)
-        self.initUI()
+        self.initUI(flight_data)
 
-    def initUI(self):
+    def initUI(self, flight_data):
         layout = QVBoxLayout()
 
-        self.flight_number_input = QLineEdit()
-        self.date_input = QLineEdit()
-        self.time_input = QLineEdit()
-        self.from_input = QLineEdit()
-        self.to_input = QLineEdit()
+        self.flight_number_input = QLineEdit(flight_data["flight_number"])
+        self.date_input = QLineEdit(flight_data["date"])
+        self.time_input = QLineEdit(flight_data["time"])
+        self.from_input = QLineEdit(flight_data["from"])
+        self.to_input = QLineEdit(flight_data["to"])
 
         layout.addWidget(QLabel("Номер рейса:"))
         layout.addWidget(self.flight_number_input)
