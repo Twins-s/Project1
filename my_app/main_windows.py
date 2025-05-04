@@ -1,7 +1,7 @@
-from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTabWidget, QPushButton, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QTabWidget, QPushButton
 from my_app.flight_management import FlightsTab
 from my_app.passenger_management import PassengersTab
-from my_app.customer_support import ComplaintsTab, AddComplaintWindow
+from my_app.customer_support import ComplaintsTab
 from my_app.reporting import ReportsTab
 from my_app.booking import BookingTab
 

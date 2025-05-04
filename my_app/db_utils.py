@@ -50,7 +50,7 @@ def create_database():
 def get_flights():
     conn = sqlite3.connect('../flights.db')
     c = conn.cursor()
-    c.execute("SELECT * FROM flights")
+    c.execute("SELECT rowid, flight_number, date FROM flights")  # Используйте rowid для идентификатора
     flights = c.fetchall()
     conn.close()
     return flights
@@ -63,15 +63,10 @@ def get_bookings():
     conn.close()
     return bookings
 
-def calculate_revenue_and_profit():
-    conn = sqlite3.connect('../flights.db')
-    c = conn.cursor()
-    c.execute("SELECT SUM(ticket_price) AS total_revenue FROM bookings")
-    revenue = c.fetchone()[0]
-    c.execute("SELECT SUM(ticket_price) * 0.8 AS total_profit FROM bookings")
-    profit = c.fetchone()[0]
-    conn.close()
-    return revenue, profit
+def calculate_revenue_and_profit(bookings):
+    total_revenue = sum(b[3] for b in bookings)  # Предполагается, что цена - это четвертый элемент в кортеже
+    total_profit = total_revenue * 0.8  # Например, 80% от выручки
+    return total_revenue, total_profit
 
 def add_complaint(customer_name, complaint_text):
     conn = sqlite3.connect('../flights.db')

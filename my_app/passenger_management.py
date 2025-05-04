@@ -1,8 +1,10 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem, QLineEdit, QLabel
+import sqlite3
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem
 
 class PassengersTab(QWidget):
-    def __init__(self):
+    def __init__(self, db_connection):
         super().__init__()
+        self.db_connection = db_connection  # Сохраняем соединение с БД
         self.initUI()
 
     def initUI(self):
@@ -27,16 +29,65 @@ class PassengersTab(QWidget):
         self.load_passengers()
 
     def load_passengers(self):
-        # Здесь вы должны реализовать код для загрузки списка пассажиров из базы данных
-        # и заполнения таблицы self.passengers_table
-        pass
+        try:
+            c = self.db_connection.cursor()
+
+            # Получение списка пассажиров
+            c.execute("SELECT passenger_name, booking_id, ticket_price FROM bookings")
+            passengers = c.fetchall()
+
+            # Заполнение таблицы
+            self.passengers_table.setRowCount(len(passengers))
+            for i, passenger in enumerate(passengers):
+                self.passengers_table.setItem(i, 0, QTableWidgetItem(passenger[0]))
+                self.passengers_table.setItem(i, 1, QTableWidgetItem(str(passenger[1])))
+                self.passengers_table.setItem(i, 2, QTableWidgetItem(str(passenger[2])))
+
+        except sqlite3.Error as e:
+            print(f"Ошибка при загрузке пассажиров: {e}")
 
     def edit_passenger(self):
-        # Здесь вы должны реализовать код для редактирования данных пассажира в базе данных
-        # на основе выбранной строки в таблице self.passengers_table
-        pass
+        try:
+            # Получение выбранной строки
+            selected_row = self.passengers_table.currentRow()
+            if selected_row == -1:
+                return
+
+            # Получение данных пассажира
+            passenger_name = self.passengers_table.item(selected_row, 0).text()
+            booking_id = int(self.passengers_table.item(selected_row, 1).text())
+            ticket_price = float(self.passengers_table.item(selected_row, 2).text())
+
+            # Обновление данных пассажира в базе данных
+            conn = sqlite3.connect('../flights.db')
+            c = conn.cursor()
+            c.execute("UPDATE bookings SET passenger_name = ?, ticket_price = ? WHERE booking_id = ?", (passenger_name, ticket_price, booking_id))
+            conn.commit()
+            conn.close()
+
+            # Обновление таблицы
+            self.load_passengers()
+        except sqlite3.Error as e:
+            print(f"Ошибка при редактировании пассажира: {e}")
 
     def delete_passenger(self):
-        # Здесь вы должны реализовать код для удаления пассажира из базы данных
-        # на основе выбранной строки в таблице self.passengers_table
-        pass
+        try:
+            # Получение выбранной строки
+            selected_row = self.passengers_table.currentRow()
+            if selected_row == -1:
+                return
+
+            # Получение booking_id пассажира
+            booking_id = int(self.passengers_table.item(selected_row, 1).text())
+
+            # Удаление пассажира из базы данных
+            conn = sqlite3.connect('../flights.db')
+            c = conn.cursor()
+            c.execute("DELETE FROM bookings WHERE booking_id = ?", (booking_id,))
+            conn.commit()
+            conn.close()
+
+            # Обновление таблицы
+            self.load_passengers()
+        except sqlite3.Error as e:
+            print(f"Ошибка при удалении пассажира: {e}")
