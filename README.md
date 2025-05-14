@@ -27,9 +27,8 @@
 
 ## Статус сборки и тестирования
 
-!\[Tests\](https://github.com/username/repo-name/actions/workflows/test.yml/badge.svg)
-!\[Build\](https://github.com/username/repo-name/actions/workflows/build.yml/badge.svg)
-!\[Deploy\](https://github.com/username/repo-name/actions/workflows/deploy.yml/badge.svg)
+!\[Tests\](https://github.com/Twins-s/Project1/blob/main/.github/workflows/ci.yml/badge.svg)
+!\[Build\](https://github.com/Twins-s/Project1/blob/main/.github/workflows/build.yml/badge.svg)
 
 ## Документирование настроенной автоматизации
 
